@@ -1,0 +1,49 @@
+{
+  "stroke": "overhead",
+  "phases": {
+    "ready": {
+      "balance_min": 0.65,
+      "feedback_good": "Sideways ready under the lob.",
+      "feedback_bad": "Square to the net under the lob — turn sideways earlier.",
+      "ideal": "Turn sideways, non-hitting arm tracking the ball."
+    },
+    "unit_turn": {
+      "hip_shoulder_sep_min": 0.15,
+      "feedback_good": "Good coil for the smash.",
+      "feedback_bad": "Not enough turn — rotate the shoulders under the ball.",
+      "ideal": "Trophy-like coil beneath the lob."
+    },
+    "takeback": {
+      "feedback_good": "Racquet up early.",
+      "feedback_bad": "Racquet is late going up — get it behind the head sooner.",
+      "ideal": "Racquet behind the head before the ball peaks."
+    },
+    "racquet_drop": {
+      "feedback_good": "Drop into the hitting slot.",
+      "feedback_bad": "Casting the racquet — drop it behind the back first.",
+      "ideal": "Deep drop then upward acceleration."
+    },
+    "acceleration": {
+      "peak_speed_min": 1.3,
+      "feedback_good": "Aggressive upward swing.",
+      "feedback_bad": "Arming the smash — use the legs and uncoil.",
+      "ideal": "Legs and core drive the racquet up."
+    },
+    "contact": {
+      "hand_y_max": 0.32,
+      "feedback_good": "High contact on the smash.",
+      "feedback_bad": "Letting the ball drop too low — take it higher.",
+      "ideal": "Contact at full reach above the head."
+    },
+    "extension": {
+      "feedback_good": "Full extension through the ball.",
+      "feedback_bad": "Pulling down early — hit up and through.",
+      "ideal": "Reach up and across after contact."
+    },
+    "finish": {
+      "feedback_good": "Balanced finish inside the court.",
+      "feedback_bad": "Falling away — finish balanced and recover.",
+      "ideal": "Land balanced, racquet past the hip."
+    }
+  }
+}

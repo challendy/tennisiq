@@ -1,0 +1,51 @@
+{
+  "stroke": "backhand",
+  "phases": {
+    "ready": {
+      "balance_min": 0.7,
+      "feedback_good": "Prepared with a compact ready position.",
+      "feedback_bad": "Late preparation — get the non-dominant hand on the throat earlier.",
+      "ideal": "Two hands set, shoulders square to the net."
+    },
+    "unit_turn": {
+      "hip_shoulder_sep_min": 0.15,
+      "feedback_good": "Early shoulder turn loading the backhand side.",
+      "feedback_bad": "Unit turn is late — turn as the ball leaves the opponent's racquet.",
+      "ideal": "Shoulders turn so the back faces the net."
+    },
+    "takeback": {
+      "feedback_good": "Compact takeback keeping both hands on the racquet.",
+      "feedback_bad": "Takeback is loopy — keep it compact and connected.",
+      "ideal": "Racquet taken back with both hands, tip up."
+    },
+    "racquet_drop": {
+      "feedback_good": "Racquet drops into the slot.",
+      "feedback_bad": "Hitting too flat from a high slot — drop the head before swinging.",
+      "ideal": "Racquet head below the ball before the forward swing."
+    },
+    "acceleration": {
+      "peak_speed_min": 1.1,
+      "feedback_good": "Connected rotation into contact.",
+      "feedback_bad": "Arms are disconnecting from the torso — rotate the core into the shot.",
+      "ideal": "Hips and shoulders uncoil together."
+    },
+    "contact": {
+      "hand_y_min": 0.40,
+      "hand_y_max": 0.55,
+      "feedback_good": "Solid contact height out in front.",
+      "feedback_bad": "Contact is cramped — step in and meet the ball earlier.",
+      "ideal": "Contact in front of the front hip."
+    },
+    "extension": {
+      "feedback_good": "Extension through the hitting zone.",
+      "feedback_bad": "Pulling off the ball — drive the hands toward the target.",
+      "ideal": "Both arms extend toward the target."
+    },
+    "finish": {
+      "hand_y_max": 0.38,
+      "feedback_good": "High finish over the hitting shoulder.",
+      "feedback_bad": "Finish is abbreviated — let the hands wrap up high.",
+      "ideal": "Hands finish over the hitting-side shoulder."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TennisIQ.Api.Tests/TennisIQ.Api.Tests.csproj" />
+  <Project Path="TennisIQ.Api/TennisIQ.Api.csproj" />
+  <Project Path="TennisIQ.Domain/TennisIQ.Domain.csproj" />
+  <Project Path="TennisIQ.Infrastructure/TennisIQ.Infrastructure.csproj" />
+</Solution>

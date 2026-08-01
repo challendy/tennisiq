@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tennisiq
+      POSTGRES_PASSWORD: tennisiq
+      POSTGRES_DB: tennisiq
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tennisiq"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  analysis:
+    build: ./services/analysis
+    ports:
+      - "8090:8090"
+    environment:
+      TENNISIQ_SYNTHETIC_POSE: "0"
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    volumes:
+      - ./src:/src
+      - ./storage:/storage
+    command: >
+      bash -c "dotnet restore TennisIQ.slnx &&
+               dotnet run --project TennisIQ.Api --urls http://0.0.0.0:5129"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Database=tennisiq;Username=tennisiq;Password=tennisiq
+      Analysis__BaseUrl: http://analysis:8090
+      Storage__Root: /storage
+      Jwt__Key: tennisiq-dev-key-change-me-32chars!!
+      Jwt__Issuer: tennisiq
+      Jwt__Audience: tennisiq
+    ports:
+      - "5129:5129"
+    depends_on:
+      db:
+        condition: service_healthy
+      analysis:
+        condition: service_started
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    command: sh -c "corepack enable && pnpm install && pnpm dev -H 0.0.0.0 -p 3000"
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:5129
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

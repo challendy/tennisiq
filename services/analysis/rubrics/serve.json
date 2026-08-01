@@ -1,0 +1,49 @@
+{
+  "stroke": "serve",
+  "phases": {
+    "ready": {
+      "balance_min": 0.65,
+      "feedback_good": "Stable trophy-ready stance.",
+      "feedback_bad": "Stance is unstable — plant the back foot and stay balanced.",
+      "ideal": "Feet set, tossing arm free, balanced platform."
+    },
+    "unit_turn": {
+      "hip_shoulder_sep_min": 0.2,
+      "feedback_good": "Good coil into the trophy position.",
+      "feedback_bad": "Not enough shoulder turn into the trophy pose.",
+      "ideal": "Deep coil with chin over front shoulder."
+    },
+    "takeback": {
+      "feedback_good": "Racquet on edge into the backscratch.",
+      "feedback_bad": "Racquet path into the backscratch is rushed.",
+      "ideal": "Racquet drops behind the head with elbow up."
+    },
+    "racquet_drop": {
+      "feedback_good": "Deep racquet drop for whip.",
+      "feedback_bad": "Shallow drop — let the racquet head fall further behind the back.",
+      "ideal": "Racquet head well below the shoulders."
+    },
+    "acceleration": {
+      "peak_speed_min": 1.5,
+      "feedback_good": "Explosive upward drive.",
+      "feedback_bad": "Arm is casting — drive up through the ball from the legs.",
+      "ideal": "Legs drive first, arm follows up and out."
+    },
+    "contact": {
+      "hand_y_max": 0.30,
+      "feedback_good": "High contact point.",
+      "feedback_bad": "Contact is too low — toss and reach higher.",
+      "ideal": "Full extension at contact above the head."
+    },
+    "extension": {
+      "feedback_good": "Pronation and extension through the ball.",
+      "feedback_bad": "Arm stops at contact — extend and pronate through.",
+      "ideal": "Reach up and across after contact."
+    },
+    "finish": {
+      "feedback_good": "Balanced landing on the front foot.",
+      "feedback_bad": "Falling off to the side — land balanced inside the court.",
+      "ideal": "Front-foot landing, racquet finishes past the hip."
+    }
+  }
+}

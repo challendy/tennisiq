@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --court: #0b3d2e;
+  --clay: #c45c26;
+  --lime: #b8f542;
+  --sand: #f4efe6;
+  --ink: #0f1a14;
+  --mist: #d7e3db;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  color: var(--sand);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #145c44 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #1a4d38 0%, transparent 50%),
+    linear-gradient(180deg, #071c15 0%, var(--court) 40%, #062218 100%);
+  font-family:
+    "Segoe UI",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.card {
+  @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-semibold transition;
+}
+
+.btn-primary {
+  @apply btn bg-[var(--lime)] text-[var(--ink)] hover:brightness-110;
+}
+
+.btn-ghost {
+  @apply btn border border-white/20 bg-white/5 hover:bg-white/10;
+}
+
+.input {
+  @apply w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-white outline-none ring-[var(--lime)] placeholder:text-white/40 focus:ring-2;
+}
+
+.phase-bar {
+  @apply h-2 rounded-full bg-white/10 overflow-hidden;
+}
+
+.phase-bar > span {
+  @apply block h-full rounded-full bg-[var(--lime)];
+}

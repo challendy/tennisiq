@@ -1,0 +1,46 @@
+{
+  "stroke": "volley",
+  "phases": {
+    "ready": {
+      "balance_min": 0.75,
+      "feedback_good": "Compact ready position at net.",
+      "feedback_bad": "Racquet is too low — keep it up in the ready position.",
+      "ideal": "Racquet at chest height, knees soft."
+    },
+    "unit_turn": {
+      "feedback_good": "Quick shoulder turn without a big swing.",
+      "feedback_bad": "Over-rotating — keep the volley compact.",
+      "ideal": "Small turn, hands stay in front."
+    },
+    "takeback": {
+      "feedback_good": "Minimal takeback.",
+      "feedback_bad": "Too much backswing for a volley — shorten it.",
+      "ideal": "Racquet face presented early, almost no backswing."
+    },
+    "racquet_drop": {
+      "feedback_good": "Racquet head stays above the wrist.",
+      "feedback_bad": "Racquet head is dropping — keep it above the wrist.",
+      "ideal": "Firm wrist, head above the hand."
+    },
+    "acceleration": {
+      "feedback_good": "Punching through with a short path.",
+      "feedback_bad": "Swinging at the volley — punch, don't swing.",
+      "ideal": "Short forward punch with a firm wrist."
+    },
+    "contact": {
+      "feedback_good": "Contact out in front.",
+      "feedback_bad": "Contact is late — step in and meet it earlier.",
+      "ideal": "Contact well in front of the body."
+    },
+    "extension": {
+      "feedback_good": "Firm extension through contact.",
+      "feedback_bad": "Soft hands collapsing — punch through the ball.",
+      "ideal": "Arms extend toward the target briefly."
+    },
+    "finish": {
+      "feedback_good": "Compact finish ready for the next ball.",
+      "feedback_bad": "Long finish leaving you exposed — recover the ready position.",
+      "ideal": "Short finish, eyes and feet recovering."
+    }
+  }
+}
