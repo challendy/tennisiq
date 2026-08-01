@@ -1,7 +1,7 @@
 # Multi-Hit Best-Of Design
 
 **Date:** 2026-08-01  
-**Status:** Draft — awaiting review  
+**Status:** Approved for implementation  
 **Parent:** `docs/specs/2026-08-01-tennisiq-mvp-design.md`  
 **Decisions locked with Chris:** auto in upload flow; quality-gate then highest overall; counts as one quota; light UI disclosure (no picker).
 

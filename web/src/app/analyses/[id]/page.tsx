@@ -41,6 +41,18 @@ export default function AnalysisPage() {
   if (error) return <p className="text-red-300">{error}</p>;
   if (!data) return <p className="text-white/60">Loading analysis…</p>;
 
+  const mh = data.multiHit;
+  const multiEnabled = Boolean(mh?.enabled ?? mh?.Enabled);
+  const detected = mh?.detected ?? mh?.Detected ?? 0;
+  const keptIndex = mh?.keptIndex ?? mh?.KeptIndex ?? mh?.kept_index ?? null;
+  const keptScore = mh?.keptScore ?? mh?.KeptScore ?? mh?.kept_score ?? null;
+  const multiNote =
+    multiEnabled && keptIndex != null && detected > 0
+      ? `Picked hit ${keptIndex + 1} of ${detected}${
+          keptScore != null ? ` (score ${Number(keptScore).toFixed(1)})` : ""
+        }`
+      : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -54,6 +66,9 @@ export default function AnalysisPage() {
             Confidence {(data.confidence * 100).toFixed(0)}%
             {data.status !== "ok" ? " · quality gate triggered" : ""}
           </p>
+          {multiNote && (
+            <p className="mt-1 text-sm text-[var(--lime)]">{multiNote}</p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary" type="button" onClick={speak} disabled={speaking}>

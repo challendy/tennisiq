@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +54,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = "sub",
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(o =>
+{
+    o.AddPolicy("AdminOnly", p =>
+        p.RequireAuthenticatedUser()
+            .RequireClaim(JwtTokenService.AdminClaim, "true"));
+});
 builder.Services.AddHostedService<AnalysisWorker>();
 
 var app = builder.Build();
@@ -62,7 +68,11 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
+    // EnsureCreated does not alter existing tables — add IsAdmin for upgraded DBs.
+    await db.Database.ExecuteSqlRawAsync(
+        """ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "IsAdmin" boolean NOT NULL DEFAULT false;""");
     await SeedData.EnsureSeededAsync(db);
+    await BootstrapAdminAsync(db, app.Configuration, app.Logger);
 }
 
 app.UseCors();
@@ -72,5 +82,22 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
+
+static async Task BootstrapAdminAsync(AppDbContext db, IConfiguration config, ILogger logger)
+{
+    var email = (config["Admin:BootstrapEmail"]
+                 ?? Environment.GetEnvironmentVariable("TENNISIQ_BOOTSTRAP_ADMIN_EMAIL")
+                 ?? "").Trim().ToLowerInvariant();
+    if (string.IsNullOrWhiteSpace(email))
+        return;
+
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+    if (user is null || user.IsAdmin)
+        return;
+
+    user.IsAdmin = true;
+    await db.SaveChangesAsync();
+    logger.LogInformation("Bootstrapped admin flag for {Email}", email);
+}
 
 public partial class Program;

@@ -84,6 +84,22 @@ class QualityIssue(BaseModel):
     tip: str
 
 
+class MultiHitCandidate(BaseModel):
+    index: int
+    score: float | None = None
+    status: Literal["ok", "insufficient_quality"]
+    kept: bool = False
+
+
+class MultiHitInfo(BaseModel):
+    enabled: bool = True
+    detected: int
+    kept_index: int | None = None
+    kept_score: float | None = None
+    kept_window_ms: list[float] = Field(default_factory=list)
+    candidates: list[MultiHitCandidate] = Field(default_factory=list)
+
+
 class AnalysisResult(BaseModel):
     stroke: Stroke
     status: Literal["ok", "insufficient_quality"] = "ok"
@@ -99,3 +115,4 @@ class AnalysisResult(BaseModel):
     contact_estimated: bool = True
     frame_count: int = 0
     fps: float = 0.0
+    multi_hit: MultiHitInfo | None = None

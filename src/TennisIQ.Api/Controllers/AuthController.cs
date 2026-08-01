@@ -11,11 +11,11 @@ namespace TennisIQ.Api.Controllers;
 
 public record RegisterRequest(string Email, string Password, string DisplayName, string Handedness = "right");
 public record LoginRequest(string Email, string Password);
-public record AuthResponse(string Token, Guid UserId, string Email, string DisplayName, string Plan);
+public record AuthResponse(string Token, Guid UserId, string Email, string DisplayName, string Plan, bool IsAdmin);
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(AppDbContext db, JwtTokenService jwt) : ControllerBase
+public sealed class AuthController(AppDbContext db, JwtTokenService jwt, IConfiguration config) : ControllerBase
 {
     private readonly PasswordHasher<User> _hasher = new();
 
@@ -34,6 +34,7 @@ public sealed class AuthController(AppDbContext db, JwtTokenService jwt) : Contr
             Email = email,
             DisplayName = string.IsNullOrWhiteSpace(req.DisplayName) ? email.Split('@')[0] : req.DisplayName.Trim(),
             Handedness = req.Handedness is "left" or "right" ? req.Handedness : "right",
+            IsAdmin = IsBootstrapEmail(email),
             Subscription = new Subscription(),
         };
         user.PasswordHash = _hasher.HashPassword(user, req.Password);
@@ -75,11 +76,23 @@ public sealed class AuthController(AppDbContext db, JwtTokenService jwt) : Contr
             analysesUsed = user.Subscription.AnalysesUsed,
             analysesLimit = user.Subscription.Plan == PlanType.Premium ? (int?)null : Quota.FreeMonthlyLimit,
             periodStart = user.Subscription.PeriodStart,
+            isAdmin = user.IsAdmin,
         });
     }
 
+    private bool IsBootstrapEmail(string email)
+    {
+        var bootstrap = BootstrapEmail();
+        return !string.IsNullOrWhiteSpace(bootstrap)
+               && string.Equals(bootstrap, email, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string? BootstrapEmail() =>
+        config["Admin:BootstrapEmail"]
+        ?? Environment.GetEnvironmentVariable("TENNISIQ_BOOTSTRAP_ADMIN_EMAIL");
+
     private AuthResponse ToAuth(User user) =>
-        new(jwt.CreateToken(user), user.Id, user.Email, user.DisplayName, user.Subscription.Plan.ToString());
+        new(jwt.CreateToken(user), user.Id, user.Email, user.DisplayName, user.Subscription.Plan.ToString(), user.IsAdmin);
 
     private Guid UserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? User.FindFirstValue("sub")!);

@@ -43,6 +43,13 @@ public sealed class AnalysisServiceClient(HttpClient http)
             parsed.OverlayBytes = await overlayResp.Content.ReadAsByteArrayAsync(ct);
         }
 
+        if (parsed.ClipReady && !string.IsNullOrEmpty(parsed.ClipToken))
+        {
+            using var clipResp = await http.GetAsync($"/clip/{parsed.ClipToken}", ct);
+            clipResp.EnsureSuccessStatusCode();
+            parsed.ClipBytes = await clipResp.Content.ReadAsByteArrayAsync(ct);
+        }
+
         return parsed;
     }
 }
@@ -65,9 +72,33 @@ public sealed class AnalysisServiceResponse
     public double Fps { get; set; }
     public bool OverlayReady { get; set; }
     public string? OverlayToken { get; set; }
+    public bool ClipReady { get; set; }
+    public string? ClipToken { get; set; }
+    public MultiHitDto? MultiHit { get; set; }
 
     [JsonIgnore]
     public byte[]? OverlayBytes { get; set; }
+
+    [JsonIgnore]
+    public byte[]? ClipBytes { get; set; }
+}
+
+public sealed class MultiHitDto
+{
+    public bool Enabled { get; set; }
+    public int Detected { get; set; }
+    public int? KeptIndex { get; set; }
+    public double? KeptScore { get; set; }
+    public List<double> KeptWindowMs { get; set; } = [];
+    public List<MultiHitCandidateDto> Candidates { get; set; } = [];
+}
+
+public sealed class MultiHitCandidateDto
+{
+    public int Index { get; set; }
+    public double? Score { get; set; }
+    public string Status { get; set; } = "";
+    public bool Kept { get; set; }
 }
 
 public sealed class PhaseDto

@@ -37,6 +37,14 @@ public sealed class LocalVideoStorage : IVideoStorage
         return key;
     }
 
+    public async Task ReplaceAsync(string storageKey, Stream content, CancellationToken ct = default)
+    {
+        var path = GetAbsolutePath(storageKey);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await using var fs = File.Create(path);
+        await content.CopyToAsync(fs, ct);
+    }
+
     public string GetAbsolutePath(string storageKey)
     {
         var full = Path.GetFullPath(Path.Combine(_root, storageKey));

@@ -10,12 +10,13 @@ def test_pipeline_produces_overlay(tmp_path: Path):
     write_blank_video(video, frame_count=30)
     overlay = tmp_path / "overlay.mp4"
     pipe = AnalysisPipeline(estimator=SyntheticPoseEstimator(stroke=Stroke.FOREHAND))
-    result, out = pipe.analyze(
+    result, out, clip = pipe.analyze(
         video_path=video,
         stroke=Stroke.FOREHAND,
         handedness=Handedness.RIGHT,
         overlay_path=overlay,
     )
     assert result.status == "ok"
+    assert clip is None
     assert out is not None and out.exists()
     assert out.stat().st_size > 1000

@@ -6,6 +6,7 @@ export type AuthUser = {
   email: string;
   displayName: string;
   plan: string;
+  isAdmin?: boolean;
 };
 
 function authHeaders(token?: string): HeadersInit {
@@ -41,6 +42,7 @@ export async function register(body: {
     email: string;
     displayName: string;
     plan: string;
+    isAdmin?: boolean;
   }>(res);
   return data;
 }
@@ -66,6 +68,8 @@ export async function me(token: string) {
     plan: string;
     analysesUsed: number;
     analysesLimit: number | null;
+    periodStart?: string;
+    isAdmin?: boolean;
   }>(res);
 }
 
@@ -135,6 +139,18 @@ export async function getAnalysis(token: string, id: string) {
     overlayUrl: string | null;
     phases: Array<{ phase: string; score: number; feedback: string }>;
     result: unknown;
+    multiHit?: {
+      enabled?: boolean;
+      Enabled?: boolean;
+      detected?: number;
+      Detected?: number;
+      keptIndex?: number | null;
+      KeptIndex?: number | null;
+      kept_index?: number | null;
+      keptScore?: number | null;
+      KeptScore?: number | null;
+      kept_score?: number | null;
+    } | null;
     createdAt: string;
   }>(res);
 }
@@ -193,8 +209,81 @@ export async function createPracticePlan(token: string, analysisId?: string) {
     goal: string;
     generatedFromAnalysisId: string;
     items: Array<{ section: string; drill: string; reps: number; minutes: number }>;
-    createdAt: string;
   }>(res);
+}
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  displayName: string;
+  plan: string;
+  analysesUsed: number;
+  analysesLimit: number | null;
+  periodStart: string;
+  isAdmin: boolean;
+  createdAt: string;
+};
+
+export type AdminJob = {
+  id: string;
+  videoId: string;
+  userId: string;
+  userEmail: string;
+  stroke: string;
+  status: string;
+  attempts: number;
+  error?: string | null;
+  createdAt: string;
+  claimedAt?: string | null;
+};
+
+export async function adminListUsers(token: string, q = "") {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : "";
+  const res = await fetch(`${API_BASE}/api/admin/users${qs}`, {
+    headers: authHeaders(token),
+  });
+  return parse<{ users: AdminUser[] }>(res);
+}
+
+export async function adminSetPlan(token: string, userId: string, plan: "Free" | "Premium") {
+  const res = await fetch(`${API_BASE}/api/admin/users/${userId}/plan`, {
+    method: "POST",
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ plan }),
+  });
+  return parse<AdminUser>(res);
+}
+
+export async function adminResetQuota(token: string, userId: string) {
+  const res = await fetch(`${API_BASE}/api/admin/users/${userId}/reset-quota`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  return parse<AdminUser>(res);
+}
+
+export async function adminListJobs(token: string, status = "") {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await fetch(`${API_BASE}/api/admin/jobs${qs}`, {
+    headers: authHeaders(token),
+  });
+  return parse<{ jobs: AdminJob[] }>(res);
+}
+
+export async function adminRetryJob(token: string, jobId: string) {
+  const res = await fetch(`${API_BASE}/api/admin/jobs/${jobId}/retry`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  return parse<{ id: string; status: string; attempts: number; error?: string | null }>(res);
+}
+
+export async function adminCancelJob(token: string, jobId: string) {
+  const res = await fetch(`${API_BASE}/api/admin/jobs/${jobId}/cancel`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+  return parse<{ id: string; status: string; attempts: number; error?: string | null }>(res);
 }
 
 export { API_BASE };

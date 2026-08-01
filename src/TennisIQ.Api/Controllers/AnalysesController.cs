@@ -124,6 +124,17 @@ public sealed class AnalysesController(
 
         var result = JsonSerializer.Deserialize<JsonElement>(
             string.IsNullOrWhiteSpace(a.ResultJson) ? "{}" : a.ResultJson);
+
+        object? multiHit = null;
+        if (result.ValueKind == JsonValueKind.Object)
+        {
+            if (result.TryGetProperty("MultiHit", out var mh) || result.TryGetProperty("multi_hit", out mh)
+                || result.TryGetProperty("multiHit", out mh))
+            {
+                multiHit = mh;
+            }
+        }
+
         return Ok(new
         {
             a.Id,
@@ -139,6 +150,7 @@ public sealed class AnalysesController(
             overlayUrl = a.OverlayKey is null ? null : $"/api/overlays/{a.Id}",
             phases = a.PhaseScores.Select(p => new { p.Phase, p.Score, p.Feedback }),
             result,
+            multiHit,
             a.CreatedAt,
         });
     }

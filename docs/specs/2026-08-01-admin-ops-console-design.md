@@ -1,7 +1,7 @@
 # Admin Ops Console Design
 
 **Date:** 2026-08-01  
-**Status:** Draft — awaiting review  
+**Status:** Approved for implementation  
 **Parent:** `docs/specs/2026-08-01-tennisiq-mvp-design.md`  
 **Decisions locked with Chris:** local/ops console (not full product admin); `User.IsAdmin` gate; v1 = users (plan + reset quota) + jobs (list, retry, cancel).
 

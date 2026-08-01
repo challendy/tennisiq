@@ -63,6 +63,13 @@ public sealed class AnalysisWorker(
                 overlayKey = await storage.SaveOverlayAsync(overlayStream, $"{job.VideoId:N}.mp4", ct);
             }
 
+            // Multi-hit: replace the stored basket with the kept single-stroke cut.
+            if (result.ClipBytes is { Length: > 0 })
+            {
+                await using var clipStream = new MemoryStream(result.ClipBytes);
+                await storage.ReplaceAsync(job.Video.StorageKey, clipStream, ct);
+            }
+
             var analysis = new Analysis
             {
                 UserId = job.Video.UserId,

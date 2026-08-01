@@ -7,6 +7,7 @@ public interface IVideoStorage
     Task<string> SaveAsync(Stream content, string fileName, CancellationToken ct = default);
     Task<Stream> OpenReadAsync(string storageKey, CancellationToken ct = default);
     Task<string> SaveOverlayAsync(Stream content, string preferredName, CancellationToken ct = default);
+    Task ReplaceAsync(string storageKey, Stream content, CancellationToken ct = default);
     string GetAbsolutePath(string storageKey);
 }
 

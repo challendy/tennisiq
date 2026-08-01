@@ -59,7 +59,20 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000). Register, upload a stroke video (side view), wait for the analysis.
 
-> Tip: if MediaPipe can't see a person in the clip, the API asks the analysis service to fall back to a synthetic pose so you can still demo the full product loop with a blank/test clip.
+> Tips: film from the side; a basket of the same stroke in one take is fine — TennisIQ splits the hits, quality-gates them, and keeps the best (counts as one analysis). If MediaPipe can't see a person, the API can fall back to a synthetic pose so blank/test clips still demo the loop.
+
+### Admin ops console
+
+Set `Admin:BootstrapEmail` in `src/TennisIQ.Api/appsettings.json` (default `chris@tennisiq.local`), restart the API, then log in as that user. An **Admin** link appears in the nav → `/admin/users` (plan / quota) and `/admin/jobs` (retry / cancel).
+
+Existing local DBs need the column (API also runs this on startup):
+
+```sql
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "IsAdmin" boolean NOT NULL DEFAULT false;
+UPDATE "Users" SET "IsAdmin" = true WHERE "Email" = 'chris@tennisiq.local';
+```
+
+Log out and back in so the JWT picks up `is_admin`.
 
 ### Tests
 

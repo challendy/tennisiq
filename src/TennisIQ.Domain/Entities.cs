@@ -21,6 +21,7 @@ public class User
     public string PasswordHash { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Handedness { get; set; } = "right";
+    public bool IsAdmin { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Subscription Subscription { get; set; } = null!;
     public List<Video> Videos { get; set; } = [];
