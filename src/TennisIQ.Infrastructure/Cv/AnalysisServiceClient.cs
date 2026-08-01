@@ -74,6 +74,9 @@ public sealed class PhaseDto
 {
     public string Name { get; set; } = "";
     public double Score { get; set; }
+
+    /// How much this phase contributes to the overall grade for its stroke.
+    public double Weight { get; set; } = 1;
     public string Feedback { get; set; } = "";
     public string IdealComparison { get; set; } = "";
     public List<string> Observations { get; set; } = [];

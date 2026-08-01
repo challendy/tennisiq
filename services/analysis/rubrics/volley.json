@@ -1,43 +1,132 @@
 {
   "stroke": "volley",
+  "units": "Distances are torso lengths from the hip midpoint. Positive x is the direction of the swing, positive y is above the hips, so 1.0 y is roughly shoulder height. Speeds are torso lengths per second.",
+  "notes": "A volley inverts most groundstroke expectations: the bands reward a short takeback, a racquet head that stays up, and a compact finish.",
   "phases": {
     "ready": {
-      "balance_min": 0.75,
+      "weight": 1.5,
+      "checks": [
+        {
+          "metric": "mean_balance",
+          "label": "balance over base",
+          "ideal_min": 0.78,
+          "tolerance": 0.35
+        },
+        {
+          "metric": "mean_hand_y_rel",
+          "label": "hands up in front",
+          "ideal_min": 0.55,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Compact ready position at net.",
       "feedback_bad": "Racquet is too low — keep it up in the ready position.",
       "ideal": "Racquet at chest height, knees soft."
     },
     "unit_turn": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "hand stays in front",
+          "ideal_min": -0.25,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Quick shoulder turn without a big swing.",
       "feedback_bad": "Over-rotating — keep the volley compact.",
       "ideal": "Small turn, hands stay in front."
     },
     "takeback": {
+      "weight": 1.75,
+      "checks": [
+        {
+          "metric": "min_hand_x_rel",
+          "label": "backswing restraint",
+          "ideal_min": -0.45,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Minimal takeback.",
       "feedback_bad": "Too much backswing for a volley — shorten it.",
       "ideal": "Racquet face presented early, almost no backswing."
     },
     "racquet_drop": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "min_hand_y_rel",
+          "label": "racquet head stays up",
+          "ideal_min": 0.45,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Racquet head stays above the wrist.",
       "feedback_bad": "Racquet head is dropping — keep it above the wrist.",
       "ideal": "Firm wrist, head above the hand."
     },
     "acceleration": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "peak_hand_speed_rel",
+          "label": "punch, not swing",
+          "ideal_min": 3.0,
+          "ideal_max": 9.0,
+          "tolerance": 4.0
+        }
+      ],
       "feedback_good": "Punching through with a short path.",
       "feedback_bad": "Swinging at the volley — punch, don't swing.",
       "ideal": "Short forward punch with a firm wrist."
     },
     "contact": {
+      "weight": 2.0,
+      "checks": [
+        {
+          "metric": "contact_hand_x_rel",
+          "label": "contact out in front",
+          "ideal_min": 0.30,
+          "tolerance": 0.45,
+          "weight": 1.5
+        },
+        {
+          "metric": "contact_hand_y_rel",
+          "label": "contact height",
+          "ideal_min": 0.30,
+          "ideal_max": 1.20,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Contact out in front.",
       "feedback_bad": "Contact is late — step in and meet it earlier.",
       "ideal": "Contact well in front of the body."
     },
     "extension": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "short punch through",
+          "ideal_min": 0.10,
+          "ideal_max": 0.55,
+          "tolerance": 0.35
+        }
+      ],
       "feedback_good": "Firm extension through contact.",
       "feedback_bad": "Soft hands collapsing — punch through the ball.",
       "ideal": "Arms extend toward the target briefly."
     },
     "finish": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "max_hand_y_rel",
+          "label": "compact finish",
+          "ideal_max": 1.10,
+          "tolerance": 0.7
+        }
+      ],
       "feedback_good": "Compact finish ready for the next ball.",
       "feedback_bad": "Long finish leaving you exposed — recover the ready position.",
       "ideal": "Short finish, eyes and feet recovering."

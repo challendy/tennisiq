@@ -4,6 +4,17 @@ from app.kinematics.features import FrameFeatures
 from app.models import AnalysisResult, PhaseScore, QualityIssue, Stroke
 
 
+_MIN_STROKE_SPEED_REL = 1.5
+
+# How much of the overall score is carried by the weakest phase rather than
+# the weighted average of all eight.
+_WEAKEST_LINK_SHARE = 0.25
+
+# At or above this, a phase is good enough that calling it a fault would
+# contradict its own feedback.
+_SOLID_PHASE = 85.0
+
+
 def score_to_grade(score: float) -> str:
     if score >= 90:
         return "A"
@@ -36,8 +47,10 @@ def assess_quality(features: list[FrameFeatures], min_frames: int = 24) -> list[
                     tip="Film from the side in good light; keep the full body in frame.",
                 )
             )
-        speeds = [f.hand_speed for f in features]
-        if max(speeds) < 0.3:
+        # Torso lengths per second, so the gate does not depend on how much
+        # of the frame the player happens to fill.
+        speeds = [f.hand_speed_rel for f in features]
+        if max(speeds) < _MIN_STROKE_SPEED_REL:
             issues.append(
                 QualityIssue(
                     code="no_stroke_motion",
@@ -68,20 +81,39 @@ def grade_analysis(
             fps=_infer_fps(features),
         )
 
-    overall = sum(p.score for p in phase_scores) / len(phase_scores)
+    total_weight = sum(p.weight for p in phase_scores) or float(len(phase_scores))
+    weighted_mean = sum(p.score * p.weight for p in phase_scores) / total_weight
+    # A stroke is limited by its worst phase, so a flat average flatters a
+    # swing with one real defect. Pulling the weakest phase into the overall
+    # is what stops every upload from grading A.
+    weakest = min(p.score for p in phase_scores)
+    overall = (1 - _WEAKEST_LINK_SHARE) * weighted_mean + _WEAKEST_LINK_SHARE * weakest
     mean_vis = sum(f.mean_visibility for f in features) / len(features)
     confidence = max(0.35, min(0.98, 0.55 * mean_vis + 0.45 * (1.0 if len(features) >= 40 else len(features) / 40)))
 
     ranked = sorted(phase_scores, key=lambda p: p.score)
     strengths = [p.feedback for p in ranked[-2:][::-1] if p.score >= 75]
     weaknesses = [p.feedback for p in ranked[:2] if p.score < 80]
-    top = ranked[0]
-    top_fix = f"Focus on {top.name.value.replace('_', ' ')}: {top.feedback}"
+    # The highest-impact fix is not the worst phase, it is the phase where
+    # closing the gap moves the overall score most.
+    top = max(phase_scores, key=lambda p: (100.0 - p.score) * p.weight)
+    phase_label = top.name.value.replace("_", " ")
+    if top.score >= _SOLID_PHASE:
+        # Nothing is broken. Naming a fault here would contradict the phase
+        # feedback, so point at the ideal instead.
+        top_fix = (
+            f"Nothing is badly off. The most available gain is in your "
+            f"{phase_label}: {top.ideal_comparison or top.feedback}"
+        )
+    else:
+        top_fix = f"Focus on {phase_label}: {top.feedback}"
 
     peak_speed = max(f.hand_speed for f in features) if features else 0.0
+    peak_speed_rel = max(f.hand_speed_rel for f in features) if features else 0.0
     contact = next((p for p in phase_scores if p.name.value == "contact"), None)
     metrics = {
         "peak_hand_speed": round(peak_speed, 3),
+        "peak_hand_speed_rel": round(peak_speed_rel, 3),
         "mean_balance": round(sum(f.balance for f in features) / len(features), 3),
         "mean_visibility": round(mean_vis, 3),
         "contact_score": contact.score if contact else 0.0,

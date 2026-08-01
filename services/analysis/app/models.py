@@ -72,6 +72,7 @@ class PhaseWindow(BaseModel):
 class PhaseScore(BaseModel):
     name: PhaseName
     score: float = Field(ge=0, le=100)
+    weight: float = 1.0
     feedback: str
     ideal_comparison: str
     observations: list[str] = Field(default_factory=list)

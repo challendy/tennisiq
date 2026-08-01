@@ -1,46 +1,123 @@
 {
   "stroke": "serve",
+  "units": "Distances are torso lengths from the hip midpoint. Positive x is the direction of the swing, positive y is above the hips, so 1.0 y is roughly shoulder height and full reach overhead is near 2.3. Speeds are torso lengths per second.",
+  "notes": "The serve is a vertical motion, so its bands are driven by hand height rather than by depth behind the hips. The eight-phase model is a poor fit here — toss, trophy, backscratch and pronation are the real phases — so treat these scores as directional until the serve gets its own phase set.",
   "phases": {
     "ready": {
-      "balance_min": 0.65,
+      "weight": 0.75,
+      "checks": [
+        {
+          "metric": "mean_balance",
+          "label": "balance over base",
+          "ideal_min": 0.70,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Stable trophy-ready stance.",
       "feedback_bad": "Stance is unstable — plant the back foot and stay balanced.",
       "ideal": "Feet set, tossing arm free, balanced platform."
     },
     "unit_turn": {
-      "hip_shoulder_sep_min": 0.2,
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "hand travel into the trophy",
+          "ideal_max": -0.05,
+          "tolerance": 0.3
+        }
+      ],
       "feedback_good": "Good coil into the trophy position.",
       "feedback_bad": "Not enough shoulder turn into the trophy pose.",
       "ideal": "Deep coil with chin over front shoulder."
     },
     "takeback": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "max_hand_y_rel",
+          "label": "racquet hand height in the trophy",
+          "ideal_min": 1.20,
+          "tolerance": 0.8
+        }
+      ],
       "feedback_good": "Racquet on edge into the backscratch.",
       "feedback_bad": "Racquet path into the backscratch is rushed.",
       "ideal": "Racquet drops behind the head with elbow up."
     },
     "racquet_drop": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "min_hand_y_rel",
+          "label": "hand height through the drop",
+          "ideal_min": 0.70,
+          "ideal_max": 1.40,
+          "tolerance": 0.6
+        }
+      ],
       "feedback_good": "Deep racquet drop for whip.",
       "feedback_bad": "Shallow drop — let the racquet head fall further behind the back.",
       "ideal": "Racquet head well below the shoulders."
     },
     "acceleration": {
-      "peak_speed_min": 1.5,
+      "weight": 1.5,
+      "checks": [
+        {
+          "metric": "peak_hand_speed_rel",
+          "label": "peak hand speed",
+          "ideal_min": 14.0,
+          "tolerance": 7.0
+        }
+      ],
       "feedback_good": "Explosive upward drive.",
       "feedback_bad": "Arm is casting — drive up through the ball from the legs.",
       "ideal": "Legs drive first, arm follows up and out."
     },
     "contact": {
-      "hand_y_max": 0.30,
+      "weight": 2.0,
+      "checks": [
+        {
+          "metric": "contact_hand_y_rel",
+          "label": "contact height",
+          "ideal_min": 2.00,
+          "tolerance": 0.9
+        }
+      ],
       "feedback_good": "High contact point.",
       "feedback_bad": "Contact is too low — toss and reach higher.",
       "ideal": "Full extension at contact above the head."
     },
     "extension": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "reach out into the court",
+          "ideal_min": 0.20,
+          "tolerance": 0.35
+        }
+      ],
       "feedback_good": "Pronation and extension through the ball.",
       "feedback_bad": "Arm stops at contact — extend and pronate through.",
       "ideal": "Reach up and across after contact."
     },
     "finish": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "min_hand_y_rel",
+          "label": "racquet finishes past the hip",
+          "ideal_max": 0.20,
+          "tolerance": 0.6
+        },
+        {
+          "metric": "mean_balance",
+          "label": "balanced landing",
+          "ideal_min": 0.65,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Balanced landing on the front foot.",
       "feedback_bad": "Falling off to the side — land balanced inside the court.",
       "ideal": "Front-foot landing, racquet finishes past the hip."

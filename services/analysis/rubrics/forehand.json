@@ -1,49 +1,124 @@
 {
   "stroke": "forehand",
+  "units": "Distances are torso lengths from the hip midpoint. Positive x is the direction of the swing, positive y is above the hips, so 1.0 y is roughly shoulder height. Speeds are torso lengths per second.",
+  "notes": "The unit turn is the weakest phase to measure. Coil is really hip-shoulder separation, and the 2D proxy for it is too camera-dependent to threshold honestly, so this scores hand travel away from the target instead. It needs 3D pose or labelled clips before it means much.",
   "phases": {
     "ready": {
-      "balance_min": 0.7,
+      "weight": 0.5,
+      "checks": [
+        {
+          "metric": "mean_balance",
+          "label": "balance over base",
+          "ideal_min": 0.75,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Athletic ready position with balanced base.",
       "feedback_bad": "Weight is drifting — widen the base and stay on the balls of your feet.",
       "ideal": "Knees flexed, racquet in front, weight centered."
     },
     "unit_turn": {
-      "hip_shoulder_sep_min": 0.15,
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "hand travel away from target",
+          "ideal_max": -0.10,
+          "tolerance": 0.3
+        }
+      ],
       "feedback_good": "Clean unit turn loading the back hip.",
       "feedback_bad": "Unit turn is shallow — turn shoulders and hips together earlier.",
       "ideal": "Shoulders and hips co-rotate away from the target."
     },
     "takeback": {
-      "hand_x_max": 0.38,
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "min_hand_x_rel",
+          "label": "takeback depth",
+          "ideal_max": -0.80,
+          "tolerance": 0.6
+        }
+      ],
       "feedback_good": "Full takeback creating space to accelerate.",
       "feedback_bad": "Backswing is short — take the racquet further back for racquet-head speed.",
       "ideal": "Hitting hand reaches behind the back hip line."
     },
     "racquet_drop": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "min_hand_y_rel",
+          "label": "depth of the drop",
+          "ideal_max": 0.30,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Racquet drops into the slot under the ball.",
       "feedback_bad": "Missing the slot — let the racquet head drop below the hand before accelerating.",
       "ideal": "Racquet head below the hand, tip pointing down."
     },
     "acceleration": {
-      "peak_speed_min": 1.2,
+      "weight": 1.5,
+      "checks": [
+        {
+          "metric": "peak_hand_speed_rel",
+          "label": "peak hand speed",
+          "ideal_min": 10.0,
+          "tolerance": 5.0
+        }
+      ],
       "feedback_good": "Smooth acceleration into contact.",
       "feedback_bad": "Acceleration is late or muted — start the forward swing earlier from the drop.",
       "ideal": "Continuous speed build from drop through contact."
     },
     "contact": {
-      "hand_y_min": 0.40,
-      "hand_y_max": 0.55,
+      "weight": 2.0,
+      "checks": [
+        {
+          "metric": "contact_hand_y_rel",
+          "label": "contact height",
+          "ideal_min": 0.25,
+          "ideal_max": 0.75,
+          "tolerance": 0.5,
+          "weight": 1.5
+        },
+        {
+          "metric": "contact_hand_x_rel",
+          "label": "contact in front of the hips",
+          "ideal_min": 0.05,
+          "tolerance": 0.5
+        }
+      ],
       "feedback_good": "Contact height is in the strike zone out in front.",
       "feedback_bad": "Contact point is off — meet the ball out in front at waist-to-chest height.",
       "ideal": "Contact in front of the front hip, waist to mid-chest."
     },
     "extension": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "drive toward the target",
+          "ideal_min": 0.35,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Full extension through the hitting zone.",
       "feedback_bad": "Arm collapses after contact — drive through toward the target.",
       "ideal": "Arm extends toward the target after contact."
     },
     "finish": {
-      "hand_y_max": 0.35,
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "max_hand_y_rel",
+          "label": "finish height",
+          "ideal_min": 1.30,
+          "tolerance": 0.9
+        }
+      ],
       "feedback_good": "High finish over the opposite shoulder.",
       "feedback_bad": "Finish is low — wrap the racquet over the opposite shoulder.",
       "ideal": "Racquet finishes over the non-hitting shoulder."

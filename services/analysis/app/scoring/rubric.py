@@ -1,13 +1,59 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Iterable
 
 from app.kinematics.features import FrameFeatures
-from app.models import PhaseName, PhaseScore, PhaseWindow, Stroke
+from app.models import PHASE_ORDER, PhaseScore, PhaseWindow, Stroke
 
 _RUBRIC_DIR = Path(__file__).resolve().parents[2] / "rubrics"
+
+_DEFAULT_FLOOR = 30.0
+
+
+@dataclass(frozen=True)
+class _MetricContext:
+    window: list[FrameFeatures]
+    clip: list[FrameFeatures]
+    contact: FrameFeatures
+
+
+def _mean(values: Iterable[float]) -> float:
+    items = list(values)
+    return sum(items) / len(items) if items else 0.0
+
+
+# Every quantity a rubric may reference. Values are body-relative wherever a
+# distance or speed is involved: `_rel` metrics are expressed in torso lengths
+# (or torso lengths per second), measured from the hip midpoint, with positive
+# x pointing the way the player swings. That makes a threshold mean the same
+# thing regardless of camera distance, lens, player height, or handedness.
+_METRICS: dict[str, Callable[[_MetricContext], float]] = {
+    "mean_balance": lambda c: _mean(f.balance for f in c.window),
+    "min_balance": lambda c: min(f.balance for f in c.window),
+    "mean_hip_shoulder_sep": lambda c: _mean(f.hip_shoulder_separation for f in c.window),
+    "max_hip_shoulder_sep": lambda c: max(f.hip_shoulder_separation for f in c.window),
+    "min_hand_x_rel": lambda c: min(f.hand_x_rel for f in c.window),
+    "max_hand_x_rel": lambda c: max(f.hand_x_rel for f in c.window),
+    "hand_x_rel_delta": lambda c: c.window[-1].hand_x_rel - c.window[0].hand_x_rel,
+    "min_hand_y_rel": lambda c: min(f.hand_y_rel for f in c.window),
+    "max_hand_y_rel": lambda c: max(f.hand_y_rel for f in c.window),
+    "mean_hand_y_rel": lambda c: _mean(f.hand_y_rel for f in c.window),
+    "hand_y_rel_delta": lambda c: c.window[-1].hand_y_rel - c.window[0].hand_y_rel,
+    "contact_hand_x_rel": lambda c: c.contact.hand_x_rel,
+    "contact_hand_y_rel": lambda c: c.contact.hand_y_rel,
+    "peak_hand_speed_rel": lambda c: max(f.hand_speed_rel for f in c.clip),
+    "window_peak_hand_speed_rel": lambda c: max(f.hand_speed_rel for f in c.window),
+    "mean_elbow_angle": lambda c: _mean(f.elbow_angle for f in c.window),
+    "min_elbow_angle": lambda c: min(f.elbow_angle for f in c.window),
+    "max_elbow_angle": lambda c: max(f.elbow_angle for f in c.window),
+}
+
+
+class RubricError(ValueError):
+    """A rubric file is malformed. Raised at load so typos fail loudly."""
 
 
 def load_rubric(stroke: Stroke) -> dict[str, Any]:
@@ -15,7 +61,43 @@ def load_rubric(stroke: Stroke) -> dict[str, Any]:
     if not path.exists():
         path = _RUBRIC_DIR / "forehand.json"
     with path.open() as f:
-        return json.load(f)
+        rubric = json.load(f)
+    validate_rubric(rubric, source=path.name)
+    return rubric
+
+
+def validate_rubric(rubric: dict[str, Any], source: str = "<rubric>") -> None:
+    """Reject a rubric that would silently produce meaningless scores.
+
+    The failure this guards against is a phase with no measurable check:
+    it looks like analysis in the UI while the number never moves.
+    """
+    phases = rubric.get("phases")
+    if not isinstance(phases, dict):
+        raise RubricError(f"{source}: missing 'phases' object")
+
+    for phase in PHASE_ORDER:
+        rules = phases.get(phase.value)
+        if rules is None:
+            raise RubricError(f"{source}: no rules for phase '{phase.value}'")
+
+        checks = rules.get("checks")
+        if not isinstance(checks, list) or not checks:
+            raise RubricError(
+                f"{source}: phase '{phase.value}' has no checks — every phase "
+                "must be backed by at least one measurement"
+            )
+
+        for i, check in enumerate(checks):
+            where = f"{source}: phase '{phase.value}' check {i}"
+            metric = check.get("metric")
+            if metric not in _METRICS:
+                raise RubricError(f"{where}: unknown metric {metric!r}")
+            if "ideal_min" not in check and "ideal_max" not in check:
+                raise RubricError(f"{where}: needs 'ideal_min' and/or 'ideal_max'")
+            tolerance = check.get("tolerance")
+            if not isinstance(tolerance, (int, float)) or tolerance <= 0:
+                raise RubricError(f"{where}: 'tolerance' must be a positive number")
 
 
 def score_phases(
@@ -24,6 +106,8 @@ def score_phases(
     rubric: dict[str, Any],
 ) -> list[PhaseScore]:
     phase_rules: dict[str, Any] = rubric.get("phases", {})
+    contact_frame = next((w.contact_frame for w in windows if w.contact_frame is not None), None)
+    contact_feat = _feature_at(features, contact_frame)
     scores: list[PhaseScore] = []
 
     for window in windows:
@@ -32,15 +116,16 @@ def score_phases(
         if not slice_feats:
             slice_feats = features[window.start_frame : window.end_frame + 1] or features[:1]
 
-        score, observations, good = _score_window(window.name, slice_feats, features, rules)
-        feedback = rules.get("feedback_good" if good else "feedback_bad", "Keep practicing this phase.")
-        ideal = rules.get("ideal", "")
+        context = _MetricContext(window=slice_feats, clip=features, contact=contact_feat)
+        score, observations = _score_window(context, rules.get("checks", []))
+        good = score >= float(rules.get("good_at", 75.0))
         scores.append(
             PhaseScore(
                 name=window.name,
                 score=round(score, 1),
-                feedback=feedback,
-                ideal_comparison=ideal,
+                weight=float(rules.get("weight", 1.0)),
+                feedback=rules.get("feedback_good" if good else "feedback_bad", ""),
+                ideal_comparison=rules.get("ideal", ""),
                 observations=observations,
             )
         )
@@ -48,78 +133,65 @@ def score_phases(
 
 
 def _score_window(
-    name: PhaseName,
-    slice_feats: list[FrameFeatures],
-    all_feats: list[FrameFeatures],
-    rules: dict[str, Any],
-) -> tuple[float, list[str], bool]:
+    context: _MetricContext,
+    checks: list[dict[str, Any]],
+) -> tuple[float, list[str]]:
     observations: list[str] = []
-    checks: list[float] = []
+    total = 0.0
+    total_weight = 0.0
 
-    avg_balance = sum(f.balance for f in slice_feats) / len(slice_feats)
-    avg_sep = sum(f.hip_shoulder_separation for f in slice_feats) / len(slice_feats)
-    min_hand_x = min(f.hand_x for f in slice_feats)
-    max_hand_y = max(f.hand_y for f in slice_feats)
-    min_hand_y = min(f.hand_y for f in slice_feats)
-    peak_speed = max(f.hand_speed for f in all_feats) if all_feats else 0.0
-    contact_feat = slice_feats[len(slice_feats) // 2]
+    for check in checks:
+        value = _METRICS[check["metric"]](context)
+        score = _score_check(value, check)
+        weight = float(check.get("weight", 1.0))
+        total += score * weight
+        total_weight += weight
+        observations.append(_describe(check, value))
 
-    if "balance_min" in rules:
-        ok = avg_balance >= rules["balance_min"]
-        checks.append(100.0 if ok else max(40.0, avg_balance / rules["balance_min"] * 100))
-        observations.append(f"balance={avg_balance:.2f}")
+    if total_weight <= 0:
+        return 0.0, observations
+    return total / total_weight, observations
 
-    if "hip_shoulder_sep_min" in rules:
-        ok = avg_sep >= rules["hip_shoulder_sep_min"]
-        checks.append(100.0 if ok else max(35.0, avg_sep / rules["hip_shoulder_sep_min"] * 100))
-        observations.append(f"hip_shoulder_sep={avg_sep:.2f}")
 
-    if "hand_x_max" in rules:
-        # Smaller hand_x = deeper takeback on a righty side view.
-        ok = min_hand_x <= rules["hand_x_max"]
-        if ok:
-            checks.append(100.0)
-        else:
-            overshoot = min_hand_x - rules["hand_x_max"]
-            checks.append(max(30.0, 100.0 - overshoot * 400))
-        observations.append(f"min_hand_x={min_hand_x:.2f}")
+def _score_check(value: float, check: dict[str, Any]) -> float:
+    """Full marks inside the target band, easing to a floor outside it.
 
-    if "peak_speed_min" in rules:
-        ok = peak_speed >= rules["peak_speed_min"]
-        checks.append(100.0 if ok else max(35.0, peak_speed / rules["peak_speed_min"] * 100))
-        observations.append(f"peak_speed={peak_speed:.2f}")
+    The bands describe good technique rather than merely acceptable
+    technique, which is what leaves the scale room to separate a solid
+    stroke from an excellent one.
+    """
+    low = check.get("ideal_min")
+    high = check.get("ideal_max")
 
-    if "hand_y_min" in rules or "hand_y_max" in rules:
-        y = contact_feat.hand_y if name == PhaseName.CONTACT else (min_hand_y + max_hand_y) / 2
-        lo = rules.get("hand_y_min", 0.0)
-        hi = rules.get("hand_y_max", 1.0)
-        if lo <= y <= hi:
-            checks.append(100.0)
-        else:
-            dist = lo - y if y < lo else y - hi
-            checks.append(max(30.0, 100.0 - dist * 300))
-        observations.append(f"hand_y={y:.2f}")
+    if low is not None and value < low:
+        distance = low - value
+    elif high is not None and value > high:
+        distance = value - high
+    else:
+        return 100.0
 
-    if name == PhaseName.FINISH and "hand_y_max" in rules:
-        # Already handled above via hand_y_max; ensure finish uses min hand_y (highest point).
-        pass
+    floor = float(check.get("floor", _DEFAULT_FLOOR))
+    tolerance = float(check["tolerance"])
+    shortfall = min(1.0, distance / tolerance)
+    return floor + (100.0 - floor) * (1.0 - shortfall)
 
-    if name == PhaseName.RACQUET_DROP:
-        # Drop quality: hand should be lower than at takeback start.
-        ok = max_hand_y >= 0.50
-        checks.append(95.0 if ok else 55.0)
-        observations.append(f"drop_hand_y={max_hand_y:.2f}")
 
-    if name == PhaseName.EXTENSION:
-        # Hand should move forward (increasing x) through extension.
-        dx = slice_feats[-1].hand_x - slice_feats[0].hand_x
-        ok = dx > 0.02
-        checks.append(95.0 if ok else 50.0)
-        observations.append(f"extension_dx={dx:.2f}")
+def _describe(check: dict[str, Any], value: float) -> str:
+    label = check.get("label", check["metric"])
+    low = check.get("ideal_min")
+    high = check.get("ideal_max")
+    if low is not None and high is not None:
+        target = f"target {low:g}–{high:g}"
+    elif low is not None:
+        target = f"target ≥{low:g}"
+    else:
+        target = f"target ≤{high:g}"
+    return f"{label}={value:.2f} ({target})"
 
-    if not checks:
-        checks.append(75.0)
 
-    score = sum(checks) / len(checks)
-    good = score >= 75.0
-    return score, observations, good
+def _feature_at(features: list[FrameFeatures], frame_index: int | None) -> FrameFeatures:
+    if frame_index is not None:
+        for f in features:
+            if f.frame_index == frame_index:
+                return f
+    return features[len(features) // 2]

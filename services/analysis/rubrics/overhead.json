@@ -1,46 +1,117 @@
 {
   "stroke": "overhead",
+  "units": "Distances are torso lengths from the hip midpoint. Positive x is the direction of the swing, positive y is above the hips, so 1.0 y is roughly shoulder height and full reach overhead is near 2.3. Speeds are torso lengths per second.",
+  "notes": "Shares the serve's vertical geometry with a shorter preparation, so the bands are the serve's with lower bars. Same caveat: the eight-phase model is a rough fit for an overhead.",
   "phases": {
     "ready": {
-      "balance_min": 0.65,
+      "weight": 0.75,
+      "checks": [
+        {
+          "metric": "mean_balance",
+          "label": "balance under the lob",
+          "ideal_min": 0.68,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Sideways ready under the lob.",
       "feedback_bad": "Square to the net under the lob — turn sideways earlier.",
       "ideal": "Turn sideways, non-hitting arm tracking the ball."
     },
     "unit_turn": {
-      "hip_shoulder_sep_min": 0.15,
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "hand travel into the coil",
+          "ideal_max": -0.05,
+          "tolerance": 0.3
+        }
+      ],
       "feedback_good": "Good coil for the smash.",
       "feedback_bad": "Not enough turn — rotate the shoulders under the ball.",
       "ideal": "Trophy-like coil beneath the lob."
     },
     "takeback": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "max_hand_y_rel",
+          "label": "racquet up early",
+          "ideal_min": 1.10,
+          "tolerance": 0.8
+        }
+      ],
       "feedback_good": "Racquet up early.",
       "feedback_bad": "Racquet is late going up — get it behind the head sooner.",
       "ideal": "Racquet behind the head before the ball peaks."
     },
     "racquet_drop": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "min_hand_y_rel",
+          "label": "hand height through the drop",
+          "ideal_min": 0.60,
+          "ideal_max": 1.40,
+          "tolerance": 0.6
+        }
+      ],
       "feedback_good": "Drop into the hitting slot.",
       "feedback_bad": "Casting the racquet — drop it behind the back first.",
       "ideal": "Deep drop then upward acceleration."
     },
     "acceleration": {
-      "peak_speed_min": 1.3,
+      "weight": 1.5,
+      "checks": [
+        {
+          "metric": "peak_hand_speed_rel",
+          "label": "peak hand speed",
+          "ideal_min": 12.0,
+          "tolerance": 6.0
+        }
+      ],
       "feedback_good": "Aggressive upward swing.",
       "feedback_bad": "Arming the smash — use the legs and uncoil.",
       "ideal": "Legs and core drive the racquet up."
     },
     "contact": {
-      "hand_y_max": 0.32,
+      "weight": 2.0,
+      "checks": [
+        {
+          "metric": "contact_hand_y_rel",
+          "label": "contact height",
+          "ideal_min": 1.85,
+          "tolerance": 0.9
+        }
+      ],
       "feedback_good": "High contact on the smash.",
       "feedback_bad": "Letting the ball drop too low — take it higher.",
       "ideal": "Contact at full reach above the head."
     },
     "extension": {
+      "weight": 1.25,
+      "checks": [
+        {
+          "metric": "hand_x_rel_delta",
+          "label": "hit up and through",
+          "ideal_min": 0.18,
+          "tolerance": 0.35
+        }
+      ],
       "feedback_good": "Full extension through the ball.",
       "feedback_bad": "Pulling down early — hit up and through.",
       "ideal": "Reach up and across after contact."
     },
     "finish": {
+      "weight": 1.0,
+      "checks": [
+        {
+          "metric": "mean_balance",
+          "label": "balanced finish",
+          "ideal_min": 0.70,
+          "tolerance": 0.4
+        }
+      ],
       "feedback_good": "Balanced finish inside the court.",
       "feedback_bad": "Falling away — finish balanced and recover.",
       "ideal": "Land balanced, racquet past the hip."

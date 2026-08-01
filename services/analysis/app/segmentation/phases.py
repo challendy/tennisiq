@@ -18,8 +18,10 @@ def segment_phases(features: list[FrameFeatures]) -> list[PhaseWindow]:
         # Degenerate: equal slices so callers always get 8 phases.
         return _equal_slices(n)
 
-    speeds = [f.hand_speed for f in features]
-    hand_x = [f.hand_x for f in features]
+    # Body-relative signals: direction-normalised, so a lefty or a clip shot
+    # from the opposite sideline segments the same way.
+    speeds = [f.hand_speed_rel for f in features]
+    hand_x = [f.hand_x_rel for f in features]
 
     # Peak speed in the middle 60% of the clip — avoids startup noise.
     lo = max(1, int(n * 0.2))
@@ -30,11 +32,11 @@ def segment_phases(features: list[FrameFeatures]) -> list[PhaseWindow]:
     search_end = max(1, contact_idx - 1)
     takeback_idx = min(range(search_end), key=lambda i: hand_x[i])
 
-    # Drop is between takeback and contact, where hand_y is deepest (largest y).
+    # Drop is between takeback and contact, where the hand sits lowest.
     if contact_idx - takeback_idx >= 2:
-        drop_idx = takeback_idx + max(
+        drop_idx = takeback_idx + min(
             range(contact_idx - takeback_idx),
-            key=lambda i: features[takeback_idx + i].hand_y,
+            key=lambda i: features[takeback_idx + i].hand_y_rel,
         )
     else:
         drop_idx = takeback_idx

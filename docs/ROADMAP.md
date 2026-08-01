@@ -32,11 +32,16 @@ Make it something people will pay for and use every week.
 |---|---|
 | Billing | Stripe Checkout + Customer Portal for Premium. Soft-gate Free at 3/month. |
 | Mobile | Flutter client against the same public API. Camera capture with on-court filming tips. Offline upload queue. |
+| Camera angles | Honour the `view` parameter, which the pipeline currently discards — rear and front clips are graded against the side-view rubric and produce confident nonsense. Add a rear-view rubric (lateral spacing, contact distance from the body, recovery footwork), and refuse to grade angles no rubric covers. |
 | Auth | Magic-link / Google / Apple Sign-In. Password reset. |
 | Reliability | Azure Blob storage adapter. Managed Postgres. Redis or Azure Service Bus for the job queue. CDN for overlays. |
 | Observability | Structured logging, request tracing, analysis latency/success dashboards, Sentry. |
 | Content | Expand the drill library; coach-authored drills tagged by weakness. |
 | Quality | Browser E2E (Playwright). Golden-video regression suite for the CV pipeline. |
+
+A rear-view rubric cannot reuse the side-view heuristics: the swing runs along the camera
+axis, so hand speed is foreshortened and both contact detection and the acceleration score
+break. Rear needs its own contact cue and its own thresholds.
 
 **Exit criteria:** paid conversions from free users; mobile retention above a baseline we
 set after two weeks of analytics; p95 analysis latency under 90s for a 15s 1080p clip.
